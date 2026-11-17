@@ -47,5 +47,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Dream-TV-APK
-          path: ${{ env.PROJECT_DIR }}/build/app/outputs/flutter-apk/app-re
-          lease.apk
+          path: ${{ env.PROJECT_DIR }}/build/app/outputs/flutter-apk/app-release.apk
+          
