@@ -1,0 +1,51 @@
+
+name: Build Dream TV APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.7.5'
+
+      - name: Extract launcher source
+        run: |
+          mkdir extracted
+          unzip -q FLauncher-master.zip -d extracted
+          PROJECT_DIR=$(find extracted -name pubspec.yaml -print -quit | xargs dirname)
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: |
+          cd "$PROJECT_DIR"
+          flutter pub get
+
+      - name: Build APK
+        run: |
+          cd "$PROJECT_DIR"
+          flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dream-TV-APK
+          path: ${{ env.PROJECT_DIR }}/build/app/outputs/flutter-apk/app-re
+          lease.apk
