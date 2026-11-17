@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '11'
@@ -29,21 +29,18 @@ jobs:
         with:
           flutter-version: '3.7.5'
           channel: stable
-          cache: true
 
       - name: Extract launcher source
         shell: bash
         run: |
-          set -euo pipefail
-
-          test -f FLauncher-master.zip
+          set -e
           mkdir -p extracted
           unzip -q FLauncher-master.zip -d extracted
 
           PUBSPEC=$(find extracted -name pubspec.yaml -print -quit)
 
           if [ -z "$PUBSPEC" ]; then
-            echo "ERROR: Could not find pubspec.yaml"
+            echo "ERROR: pubspec.yaml not found"
             exit 1
           fi
 
@@ -55,25 +52,25 @@ jobs:
           cd "$PROJECT_DIR"
           flutter pub get
 
-      - name: Configure test signing
+      - name: Build debug APK
         shell: bash
         run: |
-          APP_GRADLE="$PROJECT_DIR/android/app/build.gradle"
-
-          if [ -f "$APP_GRADLE" ]; then
-            sed -i 's/signingConfig signingConfigs.release/signingConfig signingConfigs.debug/' "$APP_GRADLE"
-          fi
-
-      - name: Build APK
-        run: |
+          set -o pipefail
           cd "$PROJECT_DIR"
-          flutter build apk --release
+          flutter build apk --debug --verbose 2>&1 | tee "$GITHUB_WORKSPACE/build-debug.log"
+          cp build/app/outputs/flutter-apk/app-debug.apk "$GITHUB_WORKSPACE/dream-tv-debug.apk"
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dream-TV-Build-Log
+          path: build-debug.log
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: Dream-TV-APK
-          path: ${{ env.PROJECT_DIR }}/build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
-          
-          retention-days: 7
+          path: dre
+          am-tv-debug.apk
